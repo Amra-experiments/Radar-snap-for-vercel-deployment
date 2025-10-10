@@ -48,7 +48,7 @@
                         <div class="bg-blue-50 rounded-lg p-4">
                             <p class="text-sm text-blue-600 font-medium mb-1">Total Sessions</p>
                             <p class="text-2xl font-bold text-blue-900">{{ formatNumber(sessionMetrics?.totalSessions)
-                            }}</p>
+                                }}</p>
                         </div>
 
                         <div class="bg-green-50 rounded-lg p-4">
@@ -80,7 +80,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Success Rate</span>
                             <span class="text-sm font-bold text-green-600">{{ sessionMetrics?.successRate.toFixed(1)
-                            }}%</span>
+                                }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="bg-green-500 h-2 rounded-full transition-all duration-300"
@@ -93,7 +93,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Error Rate</span>
                             <span class="text-sm font-bold text-red-600">{{ sessionMetrics?.errorRate.toFixed(1)
-                            }}%</span>
+                                }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="bg-red-500 h-2 rounded-full transition-all duration-300"
@@ -207,7 +207,7 @@
                         <div class="text-center">
                             <p class="text-2xl font-bold text-purple-600">
                                 {{((data?.featureUsage?.reduce((sum, f) => sum + f.successRate, 0) || 0) /
-                                    (data?.featureUsage?.length || 1)).toFixed(1) }}%
+                                    (data?.featureUsage?.length || 1)).toFixed(1)}}%
                             </p>
                             <p class="text-xs text-gray-600 mt-1">Avg Success Rate</p>
                         </div>
@@ -592,8 +592,8 @@
                         </div>
                         <div class="text-center">
                             <p class="text-2xl font-bold text-orange-600">
-                                {{data?.topErrors?.filter(e => e.statusCode >= 400 && e.statusCode < 500).length || 0
-                                    }} </p>
+                                {{data?.topErrors?.filter(e => e.statusCode >= 400 && e.statusCode < 500).length || 0}}
+                                    </p>
                                     <p class="text-xs text-gray-600 mt-1">4xx Errors</p>
                         </div>
                         <div class="text-center">
@@ -783,7 +783,8 @@
             <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-semibold text-gray-900">Storage & Cookie Analytics</h2>
-                    <Button icon="pi pi-cog" class="p-button-text p-button-sm" @click="showStorageSettings = !showStorageSettings" />
+                    <Button icon="pi pi-cog" class="p-button-text p-button-sm"
+                        @click="showStorageSettings = !showStorageSettings" />
                 </div>
 
                 <!-- Storage Overview Cards -->
@@ -793,19 +794,24 @@
                         <p class="text-2xl font-bold text-blue-600">{{ data?.storageAnalytics?.totalItems || 0 }}</p>
                         <p class="text-xs text-gray-500 mt-1">across all storage</p>
                     </div>
-                    
+
                     <div class="p-4 bg-green-50 rounded-lg text-center">
                         <p class="text-sm text-gray-600 mb-1">Total Size</p>
-                        <p class="text-2xl font-bold text-green-600">{{ formatStorageSize(data?.storageAnalytics?.totalSize || 0) }}</p>
+                        <p class="text-2xl font-bold text-green-600">{{
+                            formatStorageSize(data?.storageAnalytics?.totalSize || 0) }}
+                        </p>
                         <p class="text-xs text-gray-500 mt-1">used storage</p>
                     </div>
-                    
+
                     <div class="p-4 bg-purple-50 rounded-lg text-center">
                         <p class="text-sm text-gray-600 mb-1">Cookie Consents</p>
-                        <p class="text-2xl font-bold text-purple-600">{{ data?.storageAnalytics?.cookieConsent?.accepted || 0 }}</p>
-                        <p class="text-xs text-gray-500 mt-1">{{ ((data?.storageAnalytics?.cookieConsent?.accepted || 0) / (data?.storageAnalytics?.cookieConsent?.total || 1) * 100).toFixed(1) }}% acceptance</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ data?.storageAnalytics?.cookieConsent?.accepted
+                            || 0 }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ ((data?.storageAnalytics?.cookieConsent?.accepted || 0)
+                            /
+                            (data?.storageAnalytics?.cookieConsent?.total || 1) * 100).toFixed(1) }}% acceptance</p>
                     </div>
-                    
+
                     <div class="p-4 bg-orange-50 rounded-lg text-center">
                         <p class="text-sm text-gray-600 mb-1">Storage Errors</p>
                         <p class="text-2xl font-bold text-orange-600">{{ getTotalStorageErrors() }}</p>
@@ -821,32 +827,30 @@
                             <!-- Storage Usage by Type Chart -->
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h4 class="font-medium text-gray-900 mb-4">Storage Usage by Type</h4>
-                                <PieChart
-                                    :data="storageUsageChartData"
-                                    title="Storage Usage by Type"
-                                    height="280px"
-                                />
+                                <PieChart :data="storageUsageChartData" title="Storage Usage by Type" height="280px" />
                             </div>
 
                             <!-- Storage Quotas -->
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h4 class="font-medium text-gray-900 mb-4">Storage Quotas</h4>
                                 <div class="space-y-3">
-                                    <div v-for="quota in data?.storageQuotas" :key="quota.type" class="flex items-center justify-between p-3 bg-white rounded border">
+                                    <div v-for="quota in data?.storageQuotas" :key="quota.type"
+                                        class="flex items-center justify-between p-3 bg-white rounded border">
                                         <div class="flex items-center space-x-3">
-                                            <i :class="getStorageTypeIcon(quota.type)" class="text-lg text-gray-600"></i>
+                                            <i :class="getStorageTypeIcon(quota.type)"
+                                                class="text-lg text-gray-600"></i>
                                             <div>
-                                                <p class="font-medium text-gray-900">{{ formatStorageType(quota.type) }}</p>
-                                                <p class="text-sm text-gray-500">{{ formatStorageSize(quota.used) }} / {{ formatStorageSize(quota.quota) }}</p>
+                                                <p class="font-medium text-gray-900">{{ formatStorageType(quota.type) }}
+                                                </p>
+                                                <p class="text-sm text-gray-500">{{ formatStorageSize(quota.used) }} /
+                                                    {{
+                                                    formatStorageSize(quota.quota) }}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center space-x-2">
-                                            <ProgressBar
-                                                :value="quota.percentage"
-                                                :class="getQuotaStatusColor(quota.status)"
-                                                class="w-24"
-                                                :show-value="false"
-                                            />
+                                            <ProgressBar :value="quota.percentage"
+                                                :class="getQuotaStatusColor(quota.status)" class="w-24"
+                                                :show-value="false" />
                                             <span class="text-sm font-medium" :class="getQuotaTextColor(quota.status)">
                                                 {{ quota.percentage }}%
                                             </span>
@@ -860,20 +864,13 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h4 class="font-medium text-gray-900 mb-4">Cookie Consent by Category</h4>
-                                <BarChart
-                                    :data="cookieConsentChartData"
-                                    title="Cookie Consent by Category"
-                                    height="280px"
-                                />
+                                <BarChart :data="cookieConsentChartData" title="Cookie Consent by Category"
+                                    height="280px" />
                             </div>
 
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <h4 class="font-medium text-gray-900 mb-4">Consent Trends</h4>
-                                <LineChart
-                                    :data="consentTrendsChartData"
-                                    title="Consent Trends"
-                                    height="280px"
-                                />
+                                <LineChart :data="consentTrendsChartData" title="Consent Trends" height="280px" />
                             </div>
                         </div>
                     </TabPanel>
@@ -883,21 +880,11 @@
                         <div class="mb-4 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <span class="text-sm text-gray-600">Filter by type:</span>
-                                <Dropdown
-                                    v-model="selectedStorageType"
-                                    :options="storageTypeOptions"
-                                    placeholder="All Types"
-                                    class="w-40"
-                                    show-clear
-                                />
+                                <Dropdown v-model="selectedStorageType" :options="storageTypeOptions"
+                                    placeholder="All Types" class="w-40" show-clear />
                                 <span class="text-sm text-gray-600">Category:</span>
-                                <Dropdown
-                                    v-model="selectedCategory"
-                                    :options="categoryOptions"
-                                    placeholder="All Categories"
-                                    class="w-40"
-                                    show-clear
-                                />
+                                <Dropdown v-model="selectedCategory" :options="categoryOptions"
+                                    placeholder="All Categories" class="w-40" show-clear />
                             </div>
                             <div class="text-sm text-gray-600">
                                 Showing {{ filteredStorageItems.length }} of {{ data?.storageItems?.length || 0 }} items
@@ -905,14 +892,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <StorageItemCard
-                                v-for="item in filteredStorageItems"
-                                :key="item.id"
-                                :item="item"
-                                @inspect="handleInspectItem"
-                                @copy="handleCopyItem"
-                                @delete="handleDeleteItem"
-                            />
+                            <StorageItemCard v-for="item in filteredStorageItems" :key="item.id" :item="item"
+                                @inspect="handleInspectItem" @copy="handleCopyItem" @delete="handleDeleteItem" />
                         </div>
 
                         <div v-if="filteredStorageItems.length === 0" class="text-center py-8">
@@ -927,12 +908,24 @@
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Key</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Event</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Type</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Key</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Page</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Time</th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status</th>
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
@@ -940,11 +933,14 @@
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <div class="flex items-center">
                                                 <i :class="getEventIcon(event.type)" class="mr-2 text-gray-600"></i>
-                                                <span class="text-sm text-gray-900">{{ formatEventType(event.type) }}</span>
+                                                <span class="text-sm text-gray-900">{{ formatEventType(event.type)
+                                                    }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="getStorageTypeColor(event.storageType)">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                :class="getStorageTypeColor(event.storageType)">
                                                 {{ formatStorageType(event.storageType) }}
                                             </span>
                                         </td>
@@ -958,11 +954,13 @@
                                             {{ formatRelativeTime(event.timestamp) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span v-if="event.error" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <span v-if="event.error"
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                 <i class="pi pi-exclamation-triangle mr-1"></i>
                                                 Error
                                             </span>
-                                            <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <span v-else
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 <i class="pi pi-check mr-1"></i>
                                                 Success
                                             </span>
@@ -980,7 +978,8 @@
                             <div class="bg-gray-50 rounded-lg p-6">
                                 <h4 class="font-medium text-gray-900 mb-4">Compliance Score</h4>
                                 <div class="text-center mb-4">
-                                    <div class="text-4xl font-bold text-green-600 mb-2">{{ getComplianceScore() }}%</div>
+                                    <div class="text-4xl font-bold text-green-600 mb-2">{{ getComplianceScore() }}%
+                                    </div>
                                     <p class="text-gray-600">Overall compliance rating</p>
                                 </div>
 
@@ -991,7 +990,8 @@
                                             <span class="font-medium">GDPR Compliance</span>
                                         </div>
                                         <span class="text-green-600 font-medium">
-                                            {{ data?.storageAnalytics?.compliance?.gdprCompliant ? 'Compliant' : 'Non-compliant' }}
+                                            {{ data?.storageAnalytics?.compliance?.gdprCompliant ? 'Compliant' :
+                                            'Non-compliant' }}
                                         </span>
                                     </div>
 
@@ -1001,7 +1001,8 @@
                                             <span class="font-medium">CCPA Compliance</span>
                                         </div>
                                         <span class="text-green-600 font-medium">
-                                            {{ data?.storageAnalytics?.compliance?.ccpaCompliant ? 'Compliant' : 'Non-compliant' }}
+                                            {{ data?.storageAnalytics?.compliance?.ccpaCompliant ? 'Compliant' :
+                                            'Non-compliant' }}
                                         </span>
                                     </div>
 
@@ -1011,7 +1012,9 @@
                                             <span class="font-medium">Cookie Consent</span>
                                         </div>
                                         <span class="text-blue-600 font-medium">
-                                            {{ data?.storageAnalytics?.compliance?.cookieConsentRequired ? 'Required' : 'Optional' }}
+                                            {{ data?.storageAnalytics?.compliance?.cookieConsentRequired ? 'Required' :
+                                            'Optional'
+                                            }}
                                         </span>
                                     </div>
 
@@ -1030,28 +1033,28 @@
                             <!-- Privacy Settings -->
                             <div class="bg-gray-50 rounded-lg p-6">
                                 <h4 class="font-medium text-gray-900 mb-4">Privacy & Cookie Settings</h4>
-                                
+
                                 <div class="space-y-4">
                                     <div class="flex items-center justify-between">
                                         <label class="font-medium text-gray-700">Essential Cookies</label>
                                         <InputSwitch v-model="privacySettings.essential" :disabled="true" />
                                     </div>
-                                    
+
                                     <div class="flex items-center justify-between">
                                         <label class="font-medium text-gray-700">Functional Cookies</label>
                                         <InputSwitch v-model="privacySettings.functional" />
                                     </div>
-                                    
+
                                     <div class="flex items-center justify-between">
                                         <label class="font-medium text-gray-700">Analytics Cookies</label>
                                         <InputSwitch v-model="privacySettings.analytics" />
                                     </div>
-                                    
+
                                     <div class="flex items-center justify-between">
                                         <label class="font-medium text-gray-700">Marketing Cookies</label>
                                         <InputSwitch v-model="privacySettings.marketing" />
                                     </div>
-                                    
+
                                     <div class="flex items-center justify-between">
                                         <label class="font-medium text-gray-700">Preference Cookies</label>
                                         <InputSwitch v-model="privacySettings.preferences" />
@@ -1059,7 +1062,8 @@
                                 </div>
 
                                 <div class="mt-6 pt-4 border-t border-gray-200">
-                                    <Button label="Update Privacy Settings" class="w-full" @click="updatePrivacySettings" />
+                                    <Button label="Update Privacy Settings" class="w-full"
+                                        @click="updatePrivacySettings" />
                                 </div>
                             </div>
                         </div>
@@ -1258,7 +1262,7 @@ const storageUsageChartData = computed(() => {
 const cookieConsentChartData = computed(() => {
     const consentData = data.value?.storageAnalytics?.cookieConsent?.byCategory
     if (!consentData) return []
-    
+
     return Object.entries(consentData).map(([name, value]) => ({ name, value }))
 })
 
@@ -1271,15 +1275,15 @@ const consentTrendsChartData = computed(() => {
 
 const filteredStorageItems = computed(() => {
     let items = data.value?.storageItems || []
-    
+
     if (selectedStorageType.value) {
         items = items.filter(item => item.type === selectedStorageType.value)
     }
-    
+
     if (selectedCategory.value) {
         items = items.filter(item => item.category === selectedCategory.value)
     }
-    
+
     return items.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
 })
 
@@ -1386,12 +1390,12 @@ const getComplianceScore = (): number => {
     let score = 0
     const compliance = data.value?.storageAnalytics?.compliance
     if (!compliance) return 0
-    
+
     if (compliance.gdprCompliant) score += 25
     if (compliance.ccpaCompliant) score += 25
     if (compliance.cookieConsentRequired) score += 25
     if (compliance.dataRetentionPolicy) score += 25
-    
+
     return score
 }
 
