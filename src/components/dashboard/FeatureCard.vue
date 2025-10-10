@@ -14,13 +14,6 @@ const adoptionColor = computed(() => {
     return 'text-red-600'
 })
 
-const adoptionBgColor = computed(() => {
-    const rate = props.feature.adoptionRate
-    if (rate >= 70) return 'bg-green-100'
-    if (rate >= 40) return 'bg-orange-100'
-    return 'bg-red-100'
-})
-
 const adoptionBarColor = computed(() => {
     const rate = props.feature.adoptionRate
     if (rate >= 70) return 'bg-green-500'

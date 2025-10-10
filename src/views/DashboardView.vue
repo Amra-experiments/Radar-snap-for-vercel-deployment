@@ -1108,7 +1108,6 @@ import {
     getTopErrorEndpoints,
     getErrorsByType,
     getStorageUsageByType,
-    getStorageItemsByCategory,
     formatStorageSize,
     getCookieConsentTrends,
     getStorageEvents
@@ -1117,9 +1116,9 @@ import type { APIError } from '@/types/analytics'// Router
 const router = useRouter()
 
 // Data fetching
-const { data: kpiData, isLoading: kpiLoading } = useKPIs()
-const { data: sessionMetrics, isLoading: sessionLoading } = useSessionMetrics()
-const { data: sessions, isLoading: sessionsLoading } = useSessions()
+const { data: kpiData, isLoading: _kpiLoading } = useKPIs()
+const { data: sessionMetrics, isLoading: _sessionLoading } = useSessionMetrics()
+const { data: sessions, isLoading: _sessionsLoading } = useSessions()
 const { data } = useDashboardData()
 const { refreshAll } = useRefreshDashboard()
 const dataStatus = useDataStatus()

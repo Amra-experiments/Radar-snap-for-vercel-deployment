@@ -129,7 +129,7 @@ export async function mockLogin(email: string, password: string) {
 }
 
 // Mock register function  
-export async function mockRegister(name: string, email: string, password: string) {
+export async function mockRegister(name: string, email: string, _password: string) {
   await delay(1000)
   
   // Check if email already exists
@@ -154,18 +154,18 @@ export async function mockRegister(name: string, email: string, password: string
 }
 
 // Mock projects fetch
-export async function mockFetchProjects(userId: string) {
+export async function mockFetchProjects(_userId: string) {
   await delay(500)
   
   // Return projects based on user
-  return mockProjects.filter(project => {
+  return mockProjects.filter(_project => {
     // All demo users can see all projects for testing
     return true
   })
 }
 
 // Mock project creation
-export async function mockCreateProject(name: string, websiteUrl: string, userId: string) {
+export async function mockCreateProject(name: string, websiteUrl: string, _userId: string) {
   await delay(800)
   
   const newProject: MockProject = {
