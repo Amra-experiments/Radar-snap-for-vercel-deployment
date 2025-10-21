@@ -23,11 +23,7 @@
                     </button>
                 </form>
 
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-600">
-                        Demo credentials: admin@example.com / password
-                    </p>
-                </div>
+
             </div>
         </div>
     </div>

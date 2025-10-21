@@ -44,8 +44,16 @@ import 'primeicons/primeicons.css'
 // Global Styles
 import './style.css'
 
-// Mock API interceptor for development
-import './services/mockInterceptor'
+// Import API client to initialize interceptors
+import '@/api/client'
+
+// Import API verification in development
+if (import.meta.env.DEV) {
+  import('@/api/verify')
+}
+
+// RadarSnap SDK initialization
+import { radarSnapService } from '@/services/radarSnapConfig'
 
 // Components
 import App from './App.vue'
@@ -135,3 +143,8 @@ app.use(VueQueryPlugin, {
 
 // Mount the app
 app.mount('#app')
+
+// // Initialize RadarSnap SDK after app is mounted
+// radarSnapService.initialize().catch(error => {
+//   console.error('Failed to initialize RadarSnap SDK:', error)
+// })

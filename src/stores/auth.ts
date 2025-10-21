@@ -1,33 +1,28 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import { authAPI } from '@/api/auth'
 import { useToast } from '@/composables/useToast'
-import { useRouter } from 'vue-router'
-
-interface User {
-  id: string
-  email: string
-  name: string
-  email_verified: boolean
-  created_at: string
-}
+import { storage } from '@/utils/storage'
+import type { User, RegisterRequest, ChangePasswordRequest } from '@/types/api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('auth_token'))
+  const user = ref<User | null>(storage.user.get())
+  const token = ref<string | null>(storage.tokens.getAccess())
   const isAuthenticated = computed(() => !!token.value && !!user.value)
   const loading = ref(false)
   const { showSuccess, showError } = useToast()
 
-  // Set auth token in axios headers
-  function setAuthHeader(authToken: string | null) {
+  // Set auth token in storage and update refs
+  function setAuthHeader(authToken: string | null, refreshToken?: string | null) {
     if (authToken) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
-      localStorage.setItem('auth_token', authToken)
+      storage.tokens.setAccess(authToken)
       token.value = authToken
+      if (refreshToken) {
+        storage.tokens.setRefresh(refreshToken)
+      }
     } else {
-      delete axios.defaults.headers.common['Authorization']
-      localStorage.removeItem('auth_token')
+      storage.tokens.clearTokens()
+      storage.user.clear()
       token.value = null
     }
   }
@@ -36,11 +31,25 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string) {
     loading.value = true
     try {
-      const response = await axios.post('/api/v1/auth/login', { email, password })
-      const { token: authToken, user: userData } = response.data
+      const response = await authAPI.login({ email, password })
+      
+      // Debug: Log the full response to see the token structure
+      console.log('🔍 Backend login response:', response)
+      
+      const { access_token: authToken, refresh_token: refreshToken, user: userData } = response
+      
+      console.log('🔍 Extracted access_token:', authToken)
+      console.log('🔍 Extracted refresh_token:', refreshToken)
+      console.log('🔍 Extracted user:', userData)
       
       user.value = userData
-      setAuthHeader(authToken)
+      storage.user.set(userData)
+      setAuthHeader(authToken, refreshToken)
+      
+      // Debug: Check if tokens were stored
+      console.log('🔍 After setAuthHeader - localStorage check:')
+      console.log('- Access token:', storage.tokens.getAccess())
+      console.log('- Stored user:', storage.user.get())
       
       showSuccess('Welcome back!', 'Login Successful')
       return { success: true }
@@ -54,18 +63,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Register
-  async function register(name: string, email: string, password: string) {
+  async function register(data: RegisterRequest) {
     loading.value = true
     try {
-      const response = await axios.post('/api/v1/auth/register', { 
-        name, 
-        email, 
-        password 
-      })
-      const { token: authToken, user: userData } = response.data
+      const response = await authAPI.register(data)
+      
+      const { access_token: authToken, refresh_token: refreshToken, user: userData } = response
       
       user.value = userData
-      setAuthHeader(authToken)
+      storage.user.set(userData)
+      setAuthHeader(authToken, refreshToken)
       
       showSuccess('Welcome to Radar-Snap!', 'Registration Successful')
       return { success: true }
@@ -82,9 +89,10 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     loading.value = true
     try {
-      // Call logout endpoint if token exists
-      if (token.value) {
-        await axios.post('/api/v1/auth/logout')
+      // Call logout endpoint if refresh token exists
+      const refreshToken = storage.tokens.getRefresh()
+      if (refreshToken) {
+        await authAPI.logout({ refresh_token: refreshToken })
       }
     } catch (error) {
       console.error('Logout error:', error)
@@ -95,10 +103,6 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = false
       
       showSuccess('See you soon!', 'Logged Out')
-      
-      // Redirect to login
-      const router = useRouter()
-      router.push('/login')
     }
   }
 
@@ -108,8 +112,9 @@ export const useAuthStore = defineStore('auth', () => {
     
     loading.value = true
     try {
-      const response = await axios.get('/api/v1/auth/me')
-      user.value = response.data
+      const userData = await authAPI.getCurrentUser()
+      user.value = userData
+      storage.user.set(userData)
       return { success: true }
     } catch (error) {
       console.error('Failed to fetch user:', error)
@@ -121,25 +126,24 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Forgot password
-  async function forgotPassword(email: string) {
+  // Change password
+  async function changePassword(data: ChangePasswordRequest) {
     loading.value = true
     try {
-      await axios.post('/api/v1/auth/forgot-password', { email })
+      await authAPI.changePassword(data)
+      showSuccess('Password changed successfully!')
       return { success: true }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 
-                          'Failed to send reset email'
+      const errorMessage = error.response?.data?.detail || 
+                          'Failed to change password'
+      showError(errorMessage, 'Password Change Failed')
       return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
   }
 
-  // Initialize auth on store creation
-  if (token.value) {
-    setAuthHeader(token.value)
-  }
+  // Note: Token is automatically loaded from storage and handled by interceptors
 
   return {
     // State
@@ -155,7 +159,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     fetchUser,
-    forgotPassword,
+    changePassword,
     setAuthHeader
   }
 })

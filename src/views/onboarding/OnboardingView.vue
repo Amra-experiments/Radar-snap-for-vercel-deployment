@@ -4,11 +4,8 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useProjectsStore } from '@/stores/projects'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
-import Stepper from 'primevue/stepper'
-import StepperPanel from 'primevue/stepperpanel'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -17,63 +14,74 @@ const projectsStore = useProjectsStore()
 // Form data
 const projectName = ref('')
 const websiteUrl = ref('')
-const description = ref('')
 const projectType = ref('website')
 const error = ref('')
 const currentStep = ref(0)
 
 // Project type options
 const projectTypes = [
-  { 
-    id: 'website', 
-    label: 'Website', 
-    icon: 'pi-globe', 
-    description: 'Track a website or web application' 
+  {
+    id: 'website',
+    label: 'Website',
+    icon: 'pi-globe',
+    description: 'Track a website or web application'
   },
-  { 
-    id: 'spa', 
-    label: 'Single Page App', 
-    icon: 'pi-desktop', 
-    description: 'React, Vue, Angular or similar SPA' 
+  {
+    id: 'spa',
+    label: 'Single Page App',
+    icon: 'pi-desktop',
+    description: 'React, Vue, Angular or similar SPA'
   },
-  { 
-    id: 'mobile', 
-    label: 'Mobile App', 
-    icon: 'pi-mobile', 
-    description: 'iOS or Android application' 
+  {
+    id: 'mobile',
+    label: 'Mobile App',
+    icon: 'pi-mobile',
+    description: 'iOS or Android application'
   },
-  { 
-    id: 'ecommerce', 
-    label: 'E-commerce', 
-    icon: 'pi-shopping-cart', 
-    description: 'Online store or marketplace' 
+  {
+    id: 'ecommerce',
+    label: 'E-commerce',
+    icon: 'pi-shopping-cart',
+    description: 'Online store or marketplace'
   }
 ]
 
 // Validation
 const isStep1Valid = computed(() => {
-  return projectType.value && projectName.value.trim().length >= 2
+  return projectType.value && projectName.value.trim().length >= 2  // Require both project type and name
 })
 
 const isStep2Valid = computed(() => {
-  return websiteUrl.value.trim().length > 0 && 
-         /^https?:\/\/.+/.test(websiteUrl.value)
+  return websiteUrl.value.trim().length > 0 &&
+    /^https?:\/\/.+/.test(websiteUrl.value)
+})
+
+// Final validation for project creation
+const canCreateProject = computed(() => {
+  return projectType.value &&
+    projectName.value.trim().length >= 2 &&
+    websiteUrl.value.trim().length > 0 &&
+    /^https?:\/\/.+/.test(websiteUrl.value)
 })
 
 // Steps
 async function nextStep() {
   if (currentStep.value === 0 && !isStep1Valid.value) {
-    error.value = 'Please select a project type and enter a project name'
+    if (!projectType.value) {
+      error.value = 'Please select a project type'
+    } else if (!projectName.value.trim() || projectName.value.trim().length < 2) {
+      error.value = 'Please enter a project name (minimum 2 characters)'
+    }
     return
   }
-  
+
   if (currentStep.value === 1 && !isStep2Valid.value) {
     error.value = 'Please enter a valid website URL (starting with http:// or https://)'
     return
   }
-  
+
   error.value = ''
-  
+
   if (currentStep.value < 2) {
     currentStep.value++
   } else {
@@ -89,14 +97,24 @@ function previousStep() {
 
 async function createProject() {
   error.value = ''
-  
+
+  // Ensure we have required fields for project creation
+  if (!projectName.value.trim()) {
+    error.value = 'Please enter a project name'
+    return
+  }
+
+  if (!websiteUrl.value.trim()) {
+    error.value = 'Please enter a website URL'
+    return
+  }
+
   const result = await projectsStore.createProject({
-    name: projectName.value,
-    website_url: websiteUrl.value,
-    description: description.value
+    name: projectName.value.trim(),
+    website_url: websiteUrl.value.trim()
   })
-  
-  if (result.success) {
+
+  if (result.success && result.project) {
     router.push(`/projects/${result.project.id}/setup`)
   } else {
     error.value = result.error || 'Failed to create project'
@@ -117,7 +135,7 @@ function skipOnboarding() {
           <i class="pi pi-rocket text-4xl text-blue-600"></i>
         </div>
         <h1 class="text-4xl font-bold text-gray-900 mb-4">
-          Welcome to Radar-Snap, {{ authStore.user?.name?.split(' ')[0] }}! 🎉
+          Welcome to Radar-Snap, {{ authStore.user?.first_name }}! 🎉
         </h1>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
           Let's set up your first project to start tracking analytics. This will only take a minute.
@@ -131,192 +149,191 @@ function skipOnboarding() {
             {{ error }}
           </Message>
 
-          <Stepper :value="currentStep" class="p-6">
-            <!-- Step 1: Project Type & Name -->
-            <StepperPanel header="Project Details">
-              <div class="py-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6">
-                  What type of project are you tracking?
-                </h3>
-                
-                <!-- Project Type Selection -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div 
-                    v-for="type in projectTypes" 
-                    :key="type.id"
-                    class="relative"
-                  >
-                    <input 
-                      :id="type.id"
-                      v-model="projectType" 
-                      :value="type.id"
-                      type="radio" 
-                      class="sr-only peer"
-                    />
-                    <label 
-                      :for="type.id"
-                      class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200"
-                    >
-                      <i :class="`pi ${type.icon} text-3xl text-gray-600 mb-3`"></i>
-                      <h4 class="font-semibold text-gray-900 mb-2">{{ type.label }}</h4>
-                      <p class="text-sm text-gray-600 text-center">{{ type.description }}</p>
-                    </label>
+          <!-- Custom Step Progress Indicator -->
+          <div class="p-6">
+            <div class="flex items-center justify-center mb-8">
+              <div class="flex items-center space-x-4">
+                <!-- Step 1 -->
+                <div class="flex items-center">
+                  <div :class="[
+                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                    currentStep >= 0 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                  ]">
+                    1
                   </div>
+                  <span class="ml-2 text-sm font-medium text-gray-700">Project Details</span>
                 </div>
 
-                <!-- Project Name -->
-                <div>
-                  <label for="projectName" class="block text-sm font-semibold text-gray-700 mb-3">
-                    Project Name
-                  </label>
-                  <InputText 
-                    id="projectName"
-                    v-model="projectName"
-                    placeholder="My Awesome Project"
-                    class="w-full"
-                    size="large"
-                    :class="{ 'p-invalid': error && !projectName }"
-                  />
-                  <p class="text-xs text-gray-500 mt-2">
-                    Choose a name that helps you identify this project
-                  </p>
+                <!-- Connector -->
+                <div :class="[
+                  'w-16 h-1 rounded transition-all',
+                  currentStep >= 1 ? 'bg-blue-600' : 'bg-gray-200'
+                ]"></div>
+
+                <!-- Step 2 -->
+                <div class="flex items-center">
+                  <div :class="[
+                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                    currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                  ]">
+                    2
+                  </div>
+                  <span class="ml-2 text-sm font-medium text-gray-700">Website Details</span>
+                </div>
+
+                <!-- Connector -->
+                <div :class="[
+                  'w-16 h-1 rounded transition-all',
+                  currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-200'
+                ]"></div>
+
+                <!-- Step 3 -->
+                <div class="flex items-center">
+                  <div :class="[
+                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
+                    currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                  ]">
+                    3
+                  </div>
+                  <span class="ml-2 text-sm font-medium text-gray-700">Review & Create</span>
                 </div>
               </div>
-            </StepperPanel>
+            </div>
+
+            <!-- Step Content -->
+            <!-- Step 1: Project Type & Name -->
+            <div v-if="currentStep === 0" class="py-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                What type of project are you tracking?
+              </h3>
+
+              <!-- Project Type Selection -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div v-for="type in projectTypes" :key="type.id" class="relative">
+                  <input :id="type.id" v-model="projectType" :value="type.id" type="radio" class="sr-only peer" />
+                  <label :for="type.id"
+                    class="flex flex-col items-center p-6 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all duration-200">
+                    <i :class="`pi ${type.icon} text-3xl text-gray-600 mb-3`"></i>
+                    <h4 class="font-semibold text-gray-900 mb-2">{{ type.label }}</h4>
+                    <p class="text-sm text-gray-600 text-center">{{ type.description }}</p>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Project Name -->
+              <div>
+                <label for="projectName" class="block text-sm font-semibold text-gray-700 mb-3">
+                  Project Name <span class="text-red-500">*</span>
+                </label>
+                <InputText id="projectName" v-model="projectName" placeholder="My Awesome Project" class="w-full"
+                  size="large" :class="{ 'p-invalid': error && !projectName }" />
+                <p class="text-xs text-gray-500 mt-2">
+                  Choose a name that helps you identify this project (minimum 2 characters).
+                </p>
+              </div>
+            </div>
 
             <!-- Step 2: Website Details -->
-            <StepperPanel header="Website Details">
-              <div class="py-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6">
-                  Tell us about your website
-                </h3>
-                
-                <!-- Website URL -->
-                <div class="mb-6">
-                  <label for="websiteUrl" class="block text-sm font-semibold text-gray-700 mb-3">
-                    Website URL
-                  </label>
-                  <InputText 
-                    id="websiteUrl"
-                    v-model="websiteUrl"
-                    type="url"
-                    placeholder="https://mywebsite.com"
-                    class="w-full"
-                    size="large"
-                    :class="{ 'p-invalid': error && !websiteUrl }"
-                  />
-                  <p class="text-xs text-gray-500 mt-2">
-                    The main URL where you'll install the tracking script
-                  </p>
-                </div>
+            <div v-if="currentStep === 1" class="py-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                Tell us about your website
+              </h3>
 
-                <!-- Description (Optional) -->
-                <div>
-                  <label for="description" class="block text-sm font-semibold text-gray-700 mb-3">
-                    Description <span class="text-gray-400">(Optional)</span>
-                  </label>
-                  <Textarea 
-                    id="description"
-                    v-model="description"
-                    placeholder="Brief description of your project..."
-                    class="w-full"
-                    rows="3"
-                    autoResize
-                  />
-                </div>
+              <!-- Website URL -->
+              <div class="mb-6">
+                <label for="websiteUrl" class="block text-sm font-semibold text-gray-700 mb-3">
+                  Website URL
+                </label>
+                <InputText id="websiteUrl" v-model="websiteUrl" type="url" placeholder="https://mywebsite.com"
+                  class="w-full" size="large" :class="{ 'p-invalid': error && !websiteUrl }" />
+                <p class="text-xs text-gray-500 mt-2">
+                  The main URL where you'll install the tracking script
+                </p>
               </div>
-            </StepperPanel>
+            </div>
 
             <!-- Step 3: Confirmation -->
-            <StepperPanel header="Review & Create">
-              <div class="py-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-6">
-                  Ready to create your project?
-                </h3>
-                
-                <!-- Project Summary -->
-                <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                  <h4 class="font-semibold text-gray-900 mb-4">Project Summary</h4>
-                  <div class="space-y-3">
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Type:</span>
-                      <span class="font-medium">
-                        {{ projectTypes.find(t => t.id === projectType)?.label }}
-                      </span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Name:</span>
-                      <span class="font-medium">{{ projectName }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Website:</span>
-                      <span class="font-medium">{{ websiteUrl }}</span>
-                    </div>
-                    <div v-if="description" class="flex justify-between">
-                      <span class="text-gray-600">Description:</span>
-                      <span class="font-medium">{{ description }}</span>
-                    </div>
+            <div v-if="currentStep === 2" class="py-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-6">
+                Ready to create your project?
+              </h3>
+
+              <!-- Project Summary -->
+              <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                <h4 class="font-semibold text-gray-900 mb-4">Project Summary</h4>
+                <div class="space-y-3">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Type:</span>
+                    <span class="font-medium">
+                      {{projectTypes.find(t => t.id === projectType)?.label}}
+                    </span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Name:</span>
+                    <span class="font-medium">{{ projectName }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Website:</span>
+                    <span class="font-medium">{{ websiteUrl }}</span>
                   </div>
                 </div>
-
-                <!-- What's Next -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                    <i class="pi pi-info-circle"></i>
-                    What happens next?
-                  </h4>
-                  <ul class="space-y-2 text-sm text-blue-800">
-                    <li class="flex items-center gap-2">
-                      <i class="pi pi-check text-green-600"></i>
-                      Your project will be created with a unique API key
-                    </li>
-                    <li class="flex items-center gap-2">
-                      <i class="pi pi-check text-green-600"></i>
-                      You'll get step-by-step installation instructions
-                    </li>
-                    <li class="flex items-center gap-2">
-                      <i class="pi pi-check text-green-600"></i>
-                      Start seeing analytics data immediately
-                    </li>
-                  </ul>
-                </div>
               </div>
-            </StepperPanel>
-          </Stepper>
-          
+
+              <!-- What's Next -->
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <i class="pi pi-info-circle"></i>
+                  What happens next?
+                </h4>
+                <ul class="space-y-2 text-sm text-blue-800">
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-600"></i>
+                    Your project will be created with a unique API key
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-600"></i>
+                    You'll get step-by-step installation instructions
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="pi pi-check text-green-600"></i>
+                    Start seeing analytics data immediately
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+
           <!-- Navigation -->
           <div class="flex items-center justify-between p-6 bg-gray-50 border-t border-gray-200">
             <div>
-              <Button 
-                v-if="currentStep > 0"
-                label="Previous"
-                icon="pi pi-arrow-left"
-                outlined
-                @click="previousStep"
-                :disabled="projectsStore.loading"
-              />
+              <Button v-if="currentStep > 0" label="Previous" icon="pi pi-arrow-left" outlined @click="previousStep"
+                :disabled="projectsStore.loading" />
             </div>
-            
-            <div class="flex items-center gap-3">
-              <Button 
-                label="Skip for now"
-                text
-                @click="skipOnboarding"
-                :disabled="projectsStore.loading"
-              />
-              
-              <Button 
-                :label="currentStep === 2 ? 'Create Project' : 'Continue'"
-                :icon="currentStep === 2 ? 'pi pi-plus' : 'pi pi-arrow-right'"
-                iconPos="right"
-                @click="nextStep"
-                :loading="projectsStore.loading"
-                :disabled="
-                  projectsStore.loading || 
-                  (currentStep === 0 && !isStep1Valid) ||
-                  (currentStep === 1 && !isStep2Valid)
-                "
-              />
+
+            <div class="flex flex-col items-end gap-2">
+              <!-- Validation Message -->
+              <div v-if="(currentStep === 0 && !isStep1Valid) || (currentStep === 1 && !isStep2Valid)"
+                class="text-xs text-gray-500 text-right">
+                <span v-if="currentStep === 0 && !projectType">Please select a project type</span>
+                <span v-else-if="currentStep === 0 && (!projectName.trim() || projectName.trim().length < 2)">Please
+                  enter a project name (minimum 2 characters)</span>
+                <span v-else-if="currentStep === 1 && !websiteUrl.trim()">Please enter your website URL</span>
+                <span v-else-if="currentStep === 1 && !/^https?:\/\/.+/.test(websiteUrl)">Please enter a valid URL
+                  (starting with http:// or https://)</span>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <!-- <Button label="Skip for now" text @click="skipOnboarding" :disabled="projectsStore.loading" /> -->
+
+                <Button :label="currentStep === 2 ? 'Create Project' : 'Continue'"
+                  :icon="currentStep === 2 ? 'pi pi-plus' : 'pi pi-arrow-right'" iconPos="right" @click="nextStep"
+                  :loading="projectsStore.loading" :disabled="projectsStore.loading ||
+                    (currentStep === 0 && !isStep1Valid) ||
+                    (currentStep === 1 && !isStep2Valid) ||
+                    (currentStep === 2 && !canCreateProject)
+                    " />
+              </div>
             </div>
           </div>
         </div>
@@ -368,7 +385,7 @@ function skipOnboarding() {
 }
 
 /* Radio button styling enhancements */
-input[type="radio"]:checked + label {
+input[type="radio"]:checked+label {
   transform: scale(1.02);
 }
 

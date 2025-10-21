@@ -48,7 +48,7 @@
                         <div class="bg-blue-50 rounded-lg p-4">
                             <p class="text-sm text-blue-600 font-medium mb-1">Total Sessions</p>
                             <p class="text-2xl font-bold text-blue-900">{{ formatNumber(sessionMetrics?.totalSessions)
-                                }}</p>
+                            }}</p>
                         </div>
 
                         <div class="bg-green-50 rounded-lg p-4">
@@ -80,7 +80,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Success Rate</span>
                             <span class="text-sm font-bold text-green-600">{{ sessionMetrics?.successRate.toFixed(1)
-                                }}%</span>
+                            }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="bg-green-500 h-2 rounded-full transition-all duration-300"
@@ -93,7 +93,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Error Rate</span>
                             <span class="text-sm font-bold text-red-600">{{ sessionMetrics?.errorRate.toFixed(1)
-                                }}%</span>
+                            }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
                             <div class="bg-red-500 h-2 rounded-full transition-all duration-300"
@@ -844,7 +844,7 @@
                                                 </p>
                                                 <p class="text-sm text-gray-500">{{ formatStorageSize(quota.used) }} /
                                                     {{
-                                                    formatStorageSize(quota.quota) }}</p>
+                                                        formatStorageSize(quota.quota) }}</p>
                                             </div>
                                         </div>
                                         <div class="flex items-center space-x-2">
@@ -934,7 +934,7 @@
                                             <div class="flex items-center">
                                                 <i :class="getEventIcon(event.type)" class="mr-2 text-gray-600"></i>
                                                 <span class="text-sm text-gray-900">{{ formatEventType(event.type)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
@@ -991,7 +991,7 @@
                                         </div>
                                         <span class="text-green-600 font-medium">
                                             {{ data?.storageAnalytics?.compliance?.gdprCompliant ? 'Compliant' :
-                                            'Non-compliant' }}
+                                                'Non-compliant' }}
                                         </span>
                                     </div>
 
@@ -1002,7 +1002,7 @@
                                         </div>
                                         <span class="text-green-600 font-medium">
                                             {{ data?.storageAnalytics?.compliance?.ccpaCompliant ? 'Compliant' :
-                                            'Non-compliant' }}
+                                                'Non-compliant' }}
                                         </span>
                                     </div>
 
@@ -1013,7 +1013,7 @@
                                         </div>
                                         <span class="text-blue-600 font-medium">
                                             {{ data?.storageAnalytics?.compliance?.cookieConsentRequired ? 'Required' :
-                                            'Optional'
+                                                'Optional'
                                             }}
                                         </span>
                                     </div>
@@ -1112,6 +1112,7 @@ import {
     getTopErrorEndpoints,
     getErrorsByType,
     getStorageUsageByType,
+    getStorageItemsByCategory,
     formatStorageSize,
     getCookieConsentTrends,
     getStorageEvents
@@ -1120,9 +1121,9 @@ import type { APIError } from '@/types/analytics'// Router
 const router = useRouter()
 
 // Data fetching
-const { data: kpiData, isLoading: _kpiLoading } = useKPIs()
-const { data: sessionMetrics, isLoading: _sessionLoading } = useSessionMetrics()
-const { data: sessions, isLoading: _sessionsLoading } = useSessions()
+const { data: kpiData, isLoading: kpiLoading } = useKPIs()
+const { data: sessionMetrics, isLoading: sessionLoading } = useSessionMetrics()
+const { data: sessions, isLoading: sessionsLoading } = useSessions()
 const { data } = useDashboardData()
 const { refreshAll } = useRefreshDashboard()
 const dataStatus = useDataStatus()

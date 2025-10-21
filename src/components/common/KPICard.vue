@@ -21,7 +21,7 @@
                             {{ metric.change }}
                         </span>
                     </div>
-                    <span class="text-xs text-gray-500 ml-2">vs last period</span>
+                    <span class="text-xs text-gray-500 ml-2">vs last 7 days</span>
                 </div>
             </div>
         </div>

@@ -2,42 +2,96 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useProjectsStore } from '@/stores/projects'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Checkbox from 'primevue/checkbox'
-import LoginHelp from '@/components/auth/LoginHelp.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const projectsStore = useProjectsStore()
+
+  // Global debug function for checking auth state
+  ; (window as any).debugAuth = function () {
+    console.log('🔍 Debug Auth State:')
+    console.log('- Access token:', localStorage.getItem('auth_access_token'))
+    console.log('- Refresh token:', localStorage.getItem('auth_refresh_token'))
+    console.log('- User data:', localStorage.getItem('auth_user'))
+    console.log('- Auth store state:', {
+      isAuthenticated: authStore.isAuthenticated,
+      user: authStore.user,
+      token: !!authStore.token
+    })
+  }
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 const error = ref('')
 
-// Handle credential selection from LoginHelp
-function handleCredentialSelect(credentials: { email: string; password: string }) {
-  email.value = credentials.email
-  password.value = credentials.password
-  error.value = '' // Clear any existing errors
-}
-
 async function handleLogin() {
   error.value = ''
-  
+
   if (!email.value || !password.value) {
     error.value = 'Please fill in all fields'
     return
   }
-  
   const result = await authStore.login(email.value, password.value)
-  
+
   if (result.success) {
-    // Redirect to dashboard or intended route
-    const redirect = router.currentRoute.value.query.redirect as string
-    router.push(redirect || '/dashboard')
+    console.log('✅ Login successful, auth state:', {
+      isAuthenticated: authStore.isAuthenticated,
+      user: authStore.user,
+      token: !!authStore.token
+    })
+
+    // Debug: Check localStorage tokens
+    console.log('🔍 Debug localStorage after login:')
+    console.log('- Access token:', localStorage.getItem('auth_access_token'))
+    console.log('- Refresh token:', localStorage.getItem('auth_refresh_token'))
+    console.log('- User data:', localStorage.getItem('auth_user'))
+
+    // Wait a tick to ensure token is set before making authenticated requests
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // Verify authentication before projects call
+    console.log('🔍 Pre-projects auth check:', {
+      isAuthenticated: authStore.isAuthenticated,
+      hasToken: !!authStore.token,
+      tokenInStorage: !!localStorage.getItem('auth_access_token')
+    })
+
+    // Initialize projects store after ensuring token is set
+    console.log('🔄 Initializing projects after login...')
+    await projectsStore.initialize()
+
+    console.log('📊 Projects initialized:', {
+      projectCount: projectsStore.projects.length,
+      hasProjects: projectsStore.hasProjects
+    })
+
+    // Decide where to navigate based on projects
+    let targetRoute: string
+    if (projectsStore.projects.length === 0) {
+      targetRoute = '/onboarding'
+      console.log('➡️ No projects, navigating to onboarding')
+    } else {
+      const redirect = router.currentRoute.value.query.redirect as string
+      targetRoute = redirect || '/dashboard'
+      console.log('➡️ Has projects, navigating to dashboard')
+    }
+
+    console.log('🔄 Attempting navigation to:', targetRoute)
+
+    try {
+      await router.push(targetRoute)
+      console.log('✅ Navigation successful to:', targetRoute)
+    } catch (navError) {
+      console.error('❌ Navigation failed:', navError)
+      error.value = 'Navigation failed after login'
+    }
   } else {
     error.value = result.error || 'Login failed'
   }
@@ -75,17 +129,8 @@ async function handleLogin() {
             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
               Email address
             </label>
-            <InputText 
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="you@example.com"
-              class="w-full"
-              size="large"
-              :class="{ 'p-invalid': error && !email }"
-              required
-              autocomplete="email"
-            />
+            <InputText id="email" v-model="email" type="email" placeholder="you@example.com" class="w-full" size="large"
+              :class="{ 'p-invalid': error && !email }" required autocomplete="email" />
           </div>
 
           <!-- Password -->
@@ -93,65 +138,34 @@ async function handleLogin() {
             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
-            <Password 
-              id="password"
-              v-model="password"
-              placeholder="Enter your password"
-              :feedback="false"
-              toggleMask
-              class="w-full"
-              inputClass="w-full"
-              :inputStyle="{ padding: '0.75rem 1rem' }"
-              :class="{ 'p-invalid': error && !password }"
-              required
-              autocomplete="current-password"
-            />
+            <Password id="password" v-model="password" placeholder="Enter your password" :feedback="false" toggleMask
+              class="w-full" inputClass="w-full" :inputStyle="{ padding: '0.75rem 1rem' }"
+              :class="{ 'p-invalid': error && !password }" required autocomplete="current-password" />
           </div>
 
           <!-- Remember Me and Forgot Password -->
           <div class="flex items-center justify-between">
             <div class="flex items-center">
-              <Checkbox 
-                id="remember"
-                v-model="rememberMe" 
-                :binary="true"
-              />
+              <Checkbox id="remember" v-model="rememberMe" :binary="true" />
               <label for="remember" class="ml-2 text-sm text-gray-600">
                 Remember me
               </label>
             </div>
-            <router-link 
-              to="/forgot-password" 
-              class="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
+            <router-link to="/forgot-password" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
               Forgot password?
             </router-link>
           </div>
 
           <!-- Submit Button -->
-          <Button 
-            type="submit"
-            label="Sign In"
-            class="w-full"
-            size="large"
-            :loading="authStore.loading"
-            :disabled="authStore.loading"
-          />
+          <Button type="submit" label="Sign In" class="w-full" size="large" :loading="authStore.loading"
+            :disabled="authStore.loading" />
         </form>
-
-        <!-- Demo Credentials Helper -->
-        <div class="mt-6">
-          <LoginHelp @credential-select="handleCredentialSelect" />
-        </div>
 
         <!-- Signup Link -->
         <div class="mt-8 text-center">
           <p class="text-sm text-gray-600">
             Don't have an account?
-            <router-link 
-              to="/signup" 
-              class="text-blue-600 hover:text-blue-700 font-semibold ml-1"
-            >
+            <router-link to="/signup" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
               Create one now
             </router-link>
           </p>
@@ -184,10 +198,13 @@ async function handleLogin() {
 
 <style scoped>
 /* Custom animations */
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

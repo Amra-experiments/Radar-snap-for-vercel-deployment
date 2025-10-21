@@ -1,5 +1,9 @@
 // Vue Query composables for Radar-Snap dashboard data fetching
+import { ref, computed, watch } from 'vue'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useProjectsStore } from '@/stores/projects'
+import { analyticsAPI } from '@/api/analytics'
+import { getErrorMessage } from '@/utils/errors'
 import type { 
   DashboardData, 
   KPIMetric, 
@@ -10,6 +14,7 @@ import type {
   APIError,
   UserDemographics
 } from '@/types/analytics'
+import type { DashboardOverview, DashboardQueryParams } from '@/types/api'
 import { 
   fetchDashboardData,
   fetchKPIs,
@@ -163,5 +168,154 @@ export function useDataStatus() {
       kpis: kpis.error.value,
       sessions: sessions.error.value
     }
+  }
+}
+
+/**
+ * Main dashboard composable for project-specific analytics
+ * Integrates with real API endpoints and project store
+ */
+export function useDashboard() {
+  const projectsStore = useProjectsStore()
+  
+  // State
+  const dashboardData = ref<DashboardOverview | null>(null)
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  
+  // Date range state
+  const dateRange = ref<{ start: Date; end: Date }>({
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+    end: new Date()
+  })
+  
+  // Computed
+  const hasData = computed(() => !!dashboardData.value)
+  const totalSessions = computed(() => dashboardData.value?.total_sessions || 0)
+  const totalPageViews = computed(() => dashboardData.value?.total_page_views || 0)
+  const uniqueVisitors = computed(() => dashboardData.value?.unique_visitors || 0)
+  const bounceRate = computed(() => dashboardData.value?.bounce_rate || 0)
+  const avgSessionDuration = computed(() => dashboardData.value?.avg_session_duration || 0)
+  
+  /**
+   * Fetch dashboard data
+   */
+  async function fetchDashboard(params?: DashboardQueryParams) {
+    const projectId = projectsStore.currentProjectId
+    if (!projectId) {
+      error.value = 'No project selected'
+      return { success: false, error: 'No project selected' }
+    }
+    
+    loading.value = true
+    error.value = null
+    
+    try {
+      // Build query params
+      const queryParams: DashboardQueryParams = {
+        start_date: dateRange.value.start.toISOString(),
+        end_date: dateRange.value.end.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...params
+      }
+      
+      const data = await analyticsAPI.getDashboardOverview(projectId, queryParams)
+      dashboardData.value = data
+      
+      return { success: true, data }
+    } catch (err) {
+      const message = getErrorMessage(err)
+      error.value = message
+      return { success: false, error: message }
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  /**
+   * Set date range and refresh data
+   */
+  function setDateRange(start: Date, end: Date) {
+    dateRange.value = { start, end }
+    fetchDashboard()
+  }
+  
+  /**
+   * Set preset date range
+   */
+  function setPresetRange(preset: 'today' | '7d' | '30d' | '90d') {
+    const end = new Date()
+    let start: Date
+    
+    switch (preset) {
+      case 'today':
+        start = new Date()
+        start.setHours(0, 0, 0, 0)
+        break
+      case '7d':
+        start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case '30d':
+        start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        break
+      case '90d':
+        start = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        break
+      default:
+        start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    }
+    
+    setDateRange(start, end)
+  }
+  
+  /**
+   * Format duration in human-readable format
+   */
+  function formatDuration(seconds: number): string {
+    if (seconds < 60) return `${Math.round(seconds)}s`
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m`
+    return `${(seconds / 3600).toFixed(1)}h`
+  }
+  
+  /**
+   * Format percentage
+   */
+  function formatPercentage(value: number): string {
+    return `${value.toFixed(1)}%`
+  }
+  
+  // Watch for project changes
+  watch(
+    () => projectsStore.currentProjectId,
+    () => {
+      dashboardData.value = null
+      if (projectsStore.currentProjectId) {
+        fetchDashboard()
+      }
+    },
+    { immediate: true }
+  )
+  
+  return {
+    // State
+    dashboardData,
+    loading,
+    error,
+    dateRange,
+    
+    // Computed
+    hasData,
+    totalSessions,
+    totalPageViews,
+    uniqueVisitors,
+    bounceRate,
+    avgSessionDuration,
+    
+    // Methods
+    fetchDashboard,
+    setDateRange,
+    setPresetRange,
+    formatDuration,
+    formatPercentage,
   }
 }

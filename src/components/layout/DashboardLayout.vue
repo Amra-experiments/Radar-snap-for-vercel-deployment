@@ -15,10 +15,7 @@
 
             <!-- Project Switcher -->
             <div class="px-4 py-4 border-b border-gray-200">
-                <ProjectSwitcher 
-                    @project-change="handleProjectChange"
-                    @create-project="handleCreateProject"
-                />
+                <ProjectSwitcher @project-change="handleProjectChange" @create-project="handleCreateProject" />
             </div>
 
             <!-- Navigation Menu -->
@@ -33,18 +30,17 @@
             <!-- User Profile -->
             <div class="px-4 py-4 border-t border-gray-200">
                 <div class="flex items-center">
-                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
                         <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate">{{ user?.name || 'User' }}</p>
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ (user?.first_name || '') + ' ' +
+                            (user?.last_name || 'User') }}</p>
                         <p class="text-xs text-gray-500 truncate">{{ user?.email || '' }}</p>
                     </div>
-                    <button 
-                        class="text-gray-400 hover:text-gray-600"
-                        @click="router.push('/settings')"
-                        title="Settings"
-                    >
+                    <button class="text-gray-400 hover:text-gray-600" @click="router.push('/settings')"
+                        title="Settings">
                         <i class="pi pi-cog"></i>
                     </button>
                 </div>
@@ -63,7 +59,8 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <h2 class="text-lg font-semibold text-gray-900">{{ currentPageTitle }}</h2>
-                                <span v-if="currentProject" class="text-sm text-gray-500">- {{ currentProject.name }}</span>
+                                <span v-if="currentProject" class="text-sm text-gray-500">- {{ currentProject.name
+                                }}</span>
                             </div>
                             <p class="text-sm text-gray-500">{{ currentPageDescription }}</p>
                         </div>
@@ -93,10 +90,12 @@
                             <button
                                 class="flex items-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
                                 @click="toggleProfileMenu">
-                                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-2">
+                                <div
+                                    class="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-2">
                                     <span class="text-white text-xs font-semibold">{{ getUserInitials() }}</span>
                                 </div>
-                                <span class="hidden md:block text-sm font-medium">{{ user?.name || 'User' }}</span>
+                                <span class="hidden md:block text-sm font-medium">{{ (user?.first_name || '') + ' ' +
+                                    (user?.last_name || 'User') }}</span>
                                 <i class="pi pi-chevron-down ml-2 text-xs"></i>
                             </button>
 
@@ -104,25 +103,19 @@
                             <div v-if="showProfileMenu"
                                 class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
                                 @click.stop>
-                                <router-link 
-                                    to="/profile" 
+                                <router-link to="/profile"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    @click="showProfileMenu = false"
-                                >
+                                    @click="showProfileMenu = false">
                                     <i class="pi pi-user mr-3"></i>Profile
                                 </router-link>
-                                <router-link 
-                                    to="/settings" 
+                                <router-link to="/settings"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    @click="showProfileMenu = false"
-                                >
+                                    @click="showProfileMenu = false">
                                     <i class="pi pi-cog mr-3"></i>Settings
                                 </router-link>
                                 <hr class="my-2 border-gray-200">
-                                <button 
-                                    @click="handleLogout"
-                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
+                                <button @click="handleLogout"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="pi pi-sign-out mr-3"></i>Sign Out
                                 </button>
                             </div>
@@ -207,17 +200,14 @@ const closeProfileMenu = () => {
 
 // User utilities
 function getUserInitials(): string {
-    if (!user.value?.name) return 'U'
-    return user.value.name
-        .split(' ')
-        .map(n => n.charAt(0).toUpperCase())
-        .join('')
-        .substring(0, 2)
+    if (!user.value?.first_name || !user.value?.last_name) return 'U'
+    return (user.value.first_name.charAt(0) + user.value.last_name.charAt(0))
+        .toUpperCase()
 }
 
 // Project handlers
 function handleProjectChange(projectId: string) {
-    console.log('Project switched to:', projectId)
+    projectsStore.switchProject(projectId)
 }
 
 function handleCreateProject() {
@@ -237,10 +227,32 @@ async function handleLogout() {
 // Load initial data
 onMounted(async () => {
     document.addEventListener('click', closeProfileMenu)
-    
-    // Load projects if user is authenticated
-    if (authStore.isAuthenticated && projectsStore.projects.length === 0) {
-        await projectsStore.fetchProjects()
+
+    console.log('🏠 DashboardLayout mounted, auth state:', {
+        isAuthenticated: authStore.isAuthenticated,
+        user: authStore.user?.email
+    })
+
+    // Initialize projects store if user is authenticated
+    if (authStore.isAuthenticated) {
+        console.log('🔄 Initializing projects store...')
+        await projectsStore.initialize()
+
+        console.log('📊 Projects loaded:', {
+            projectCount: projectsStore.projects.length,
+            projects: projectsStore.projects.map(p => ({ id: p.id, name: p.name }))
+        })
+
+        // If user has no projects, redirect to onboarding
+        if (projectsStore.projects.length === 0) {
+            console.log('➡️ No projects found, redirecting to onboarding...')
+            // Temporarily test with a different route
+            router.push('/onboarding')
+        } else {
+            console.log('✅ User has projects, staying on dashboard')
+        }
+    } else {
+        console.log('❌ User not authenticated in DashboardLayout')
     }
 })
 

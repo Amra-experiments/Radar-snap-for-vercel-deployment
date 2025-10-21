@@ -12,6 +12,7 @@ import SessionDetailView from '@/views/SessionDetailView.vue'
 import PerformanceView from '@/views/PerformanceView.vue'
 import ErrorsView from '@/views/ErrorsView.vue'
 import UsersView from '@/views/UsersView.vue'
+import IntegrationView from '@/views/IntegrationView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -89,13 +90,13 @@ const routes: RouteRecordRaw[] = [
         }
       },
       {
-        path: '/onboarding',
-        name: 'ProjectSetup',
-        component: () => import('@/views/OnboardingViewSimple.vue'),
+        path: '/integration',
+        name: 'Integration',
+        component: IntegrationView,
         meta: {
-          title: 'Project Setup',
-          icon: 'pi pi-cog',
-          description: 'SDK integration and project configuration',
+          title: 'SDK Integration',
+          icon: 'pi pi-code',
+          description: 'Integration script and API configuration',
           requiresAuth: true
         }
       }
@@ -132,20 +133,39 @@ const routes: RouteRecordRaw[] = [
       requiresGuest: true
     }
   },
+  {
+    path: '/auth/change-password',
+    name: 'ChangePassword',
+    component: () => import('@/views/auth/ChangePasswordView.vue'),
+    meta: {
+      title: 'Change Password',
+      layout: 'auth',
+      requiresAuth: true
+    }
+  },
   
-
+  // Onboarding Route
+  {
+    path: '/onboarding',
+    name: 'Onboarding',
+    component: () => import('@/views/onboarding/OnboardingView.vue'),
+    meta: {
+      title: 'Project Onboarding',
+      requiresAuth: true,
+      layout: 'minimal'
+    }
+  },
   
   // Project Routes
-  // Temporarily disabled - ProjectSetupView has compilation issues
-  // {
-  //   path: '/projects/:id/setup',
-  //   name: 'ProjectSetup',
-  //   component: () => import('@/views/projects/ProjectSetupView.vue'),
-  //   meta: {
-  //     title: 'Project Setup',
-  //     requiresAuth: true
-  //   }
-  // },
+  {
+    path: '/projects/:id/setup',
+    name: 'ProjectSetup',
+    component: () => import('@/views/onboarding/OnboardingViewSimple.vue'),
+    meta: {
+      title: 'Project Setup',
+      requiresAuth: true
+    }
+  },
   {
     path: '/projects/:id/settings',
     name: 'ProjectSettings',
@@ -189,6 +209,8 @@ const router = createRouter({
 
 // Navigation guards
 router.beforeEach(async (to, _from, next) => {
+  console.log('🔀 Router Guard - Navigating to:', to.path, 'from:', _from.path)
+  
   // Set page title
   const title = to.meta?.title as string
   if (title) {
@@ -202,6 +224,13 @@ router.beforeEach(async (to, _from, next) => {
   
   // Check if user is authenticated (but don't fetch user data yet to avoid loops)
   const isAuthenticated = authStore.isAuthenticated
+  
+  console.log('🔐 Auth State:', {
+    isAuthenticated,
+    hasUser: !!authStore.user,
+    hasToken: !!authStore.token,
+    requiresAuth: to.meta?.requiresAuth
+  })
   
   // Handle routes that require authentication
   if (to.meta?.requiresAuth) {
@@ -229,6 +258,36 @@ router.beforeEach(async (to, _from, next) => {
         return
       }
     }
+
+    // Initialize projects store for authenticated users
+    const { useProjectsStore } = await import('@/stores/projects')
+    const projectsStore = useProjectsStore()
+    
+    // Only initialize if not already done
+    if (!projectsStore.isInitialized) {
+      console.log('🔄 Initializing projects store in router guard...')
+      try {
+        await projectsStore.initialize()
+        console.log('📊 Projects initialization result:', {
+          projectCount: projectsStore.projects.length,
+          hasCurrentProject: !!projectsStore.currentProject
+        })
+      } catch (error) {
+        console.error('Failed to initialize projects:', error)
+        // Don't block navigation on project initialization failure
+        // Let the components handle the error state
+      }
+    }
+    
+    // Handle project-specific routes (routes that need a current project)
+    const projectSpecificRoutes = ['/dashboard', '/sessions', '/performance', '/errors', '/users', '/integration']
+    const needsProject = projectSpecificRoutes.some(route => to.path.startsWith(route))
+    
+    if (needsProject && projectsStore.projects.length === 0 && to.path !== '/onboarding') {
+      console.log('➡️ No projects found, redirecting to onboarding...')
+      next('/onboarding')
+      return
+    }
   }
   
   // Handle routes that require guest (unauthenticated) access
@@ -249,9 +308,14 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
   
-  // Handle legacy login route redirect
+  // Handle legacy route redirects
   if (to.path === '/login') {
     next('/auth/login')
+    return
+  }
+  
+  if (to.path === '/signup') {
+    next('/auth/signup')
     return
   }
   

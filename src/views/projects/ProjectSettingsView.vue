@@ -6,7 +6,8 @@
         <nav class="text-sm breadcrumb mb-4">
           <router-link to="/dashboard" class="text-blue-600 hover:text-blue-800">Dashboard</router-link>
           <span class="mx-2 text-gray-400">/</span>
-          <router-link :to="`/projects/${projectId}`" class="text-blue-600 hover:text-blue-800">{{ project?.name }}</router-link>
+          <router-link :to="`/projects/${projectId}`" class="text-blue-600 hover:text-blue-800">{{ project?.name
+            }}</router-link>
           <span class="mx-2 text-gray-400">/</span>
           <span class="text-gray-600">Settings</span>
         </nav>
@@ -27,29 +28,22 @@
             <div class="space-y-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium text-gray-700">Project Name</label>
-                <InputText 
-                  v-model="form.name" 
-                  :class="{ 'p-invalid': errors.name }"
-                  placeholder="Enter project name"
-                />
+                <InputText v-model="form.name" :class="{ 'p-invalid': errors.name }" placeholder="Enter project name"
+                  @blur="validateForm" />
                 <small class="p-error" v-if="errors.name">{{ errors.name }}</small>
               </div>
-              
+
               <div class="space-y-2">
                 <label class="text-sm font-medium text-gray-700">Website URL</label>
-                <InputText 
-                  v-model="form.website_url" 
-                  placeholder="https://example.com"
-                />
+                <InputText v-model="form.website_url" :class="{ 'p-invalid': errors.website_url }"
+                  placeholder="https://example.com" @blur="validateForm" />
+                <small class="p-error" v-if="errors.website_url">{{ errors.website_url }}</small>
+                <small class="text-gray-500">The main URL where you'll install the tracking script</small>
               </div>
-              
+
               <div class="space-y-2">
                 <label class="text-sm font-medium text-gray-700">Description</label>
-                <Textarea 
-                  v-model="form.description" 
-                  rows="3"
-                  placeholder="Enter project description (optional)"
-                />
+                <Textarea v-model="form.description" rows="3" placeholder="Enter project description (optional)" />
               </div>
             </div>
           </template>
@@ -69,33 +63,18 @@
                 <div class="flex items-center justify-between">
                   <label class="text-sm font-medium text-gray-700">API Key</label>
                   <div class="flex gap-2">
-                    <Button
-                      @click="copyApiKey"
-                      size="small"
-                      severity="secondary"
-                      outlined
-                    >
+                    <Button @click="copyApiKey" size="small" severity="secondary" outlined>
                       <i class="pi pi-copy mr-1"></i>
                       Copy
                     </Button>
-                    <Button
-                      @click="regenerateApiKey"
-                      size="small"
-                      severity="warning"
-                      outlined
-                      :loading="regenerating"
-                    >
+                    <Button @click="regenerateApiKey" size="small" severity="warning" outlined :loading="regenerating">
                       <i class="pi pi-refresh mr-1"></i>
                       Regenerate
                     </Button>
                   </div>
                 </div>
                 <div class="relative">
-                  <InputText 
-                    :value="project.api_key" 
-                    readonly
-                    class="font-mono text-sm"
-                  />
+                  <InputText :value="project.api_key" readonly class="font-mono text-sm" />
                 </div>
                 <small class="text-gray-500">This key is used to authenticate API requests</small>
               </div>
@@ -118,11 +97,7 @@
                 <p class="text-red-700 text-sm mb-4">
                   This action cannot be undone. This will permanently delete the project and all associated data.
                 </p>
-                <Button
-                  @click="confirmDelete = true"
-                  severity="danger"
-                  size="small"
-                >
+                <Button @click="confirmDelete = true" severity="danger" size="small">
                   <i class="pi pi-trash mr-1"></i>
                   Delete Project
                 </Button>
@@ -133,29 +108,16 @@
 
         <!-- Actions -->
         <div class="flex justify-between">
-          <Button
-            @click="router.back()"
-            severity="secondary"
-            outlined
-          >
+          <Button @click="router.back()" severity="secondary" outlined>
             <i class="pi pi-arrow-left mr-1"></i>
             Back
           </Button>
-          
+
           <div class="flex gap-2">
-            <Button
-              @click="resetForm"
-              severity="secondary"
-              outlined
-              :disabled="!hasChanges"
-            >
+            <Button @click="resetForm" severity="secondary" outlined :disabled="!hasChanges">
               Reset
             </Button>
-            <Button
-              @click="saveProject"
-              :loading="saving"
-              :disabled="!hasChanges || !isValidForm"
-            >
+            <Button @click="saveProject" :loading="saving" :disabled="!hasChanges || !isValidForm">
               <i class="pi pi-save mr-1"></i>
               Save Changes
             </Button>
@@ -170,12 +132,7 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <Dialog
-      v-model:visible="confirmDelete"
-      modal
-      header="Delete Project"
-      :style="{ width: '32rem' }"
-    >
+    <Dialog v-model:visible="confirmDelete" modal header="Delete Project" :style="{ width: '32rem' }">
       <div class="space-y-4">
         <div class="flex items-start gap-3">
           <i class="pi pi-exclamation-triangle text-red-500 text-xl mt-1"></i>
@@ -186,34 +143,22 @@
             </p>
           </div>
         </div>
-        
+
         <div class="space-y-2">
           <label class="text-sm font-medium text-gray-700">
             Type <span class="font-mono bg-gray-100 px-1 rounded">{{ project?.name }}</span> to confirm:
           </label>
-          <InputText 
-            v-model="deleteConfirmText" 
-            placeholder="Project name"
-            class="w-full"
-          />
+          <InputText v-model="deleteConfirmText" placeholder="Project name" class="w-full" />
         </div>
       </div>
-      
+
       <template #footer>
         <div class="flex justify-end gap-2">
-          <Button
-            @click="confirmDelete = false"
-            severity="secondary"
-            outlined
-          >
+          <Button @click="confirmDelete = false" severity="secondary" outlined>
             Cancel
           </Button>
-          <Button
-            @click="deleteProject"
-            severity="danger"
-            :loading="deleting"
-            :disabled="deleteConfirmText !== project?.name"
-          >
+          <Button @click="deleteProject" severity="danger" :loading="deleting"
+            :disabled="deleteConfirmText !== project?.name">
             <i class="pi pi-trash mr-1"></i>
             Delete Project
           </Button>
@@ -227,6 +172,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
+import { useToast } from '@/composables/useToast'
 import Card from 'primevue/card'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -236,6 +182,7 @@ import Dialog from 'primevue/dialog'
 const route = useRoute()
 const router = useRouter()
 const projectsStore = useProjectsStore()
+const { showSuccess, showError } = useToast()
 
 const projectId = route.params.id as string
 const saving = ref(false)
@@ -244,7 +191,7 @@ const deleting = ref(false)
 const confirmDelete = ref(false)
 const deleteConfirmText = ref('')
 
-const project = computed(() => 
+const project = computed(() =>
   projectsStore.projects.find(p => p.id === projectId)
 )
 
@@ -279,14 +226,26 @@ const hasChanges = computed(() => {
 
 const isValidForm = computed(() => {
   return form.value.name.trim().length > 0 &&
-         Object.keys(errors.value).length === 0
+    Object.keys(errors.value).length === 0
 })
 
 function validateForm() {
   errors.value = {}
-  
+
+  // Validate project name
   if (!form.value.name.trim()) {
     errors.value.name = 'Project name is required'
+  } else if (form.value.name.trim().length < 2) {
+    errors.value.name = 'Project name must be at least 2 characters'
+  }
+
+  // Validate website URL if provided
+  if (form.value.website_url.trim()) {
+    try {
+      new URL(form.value.website_url.trim())
+    } catch {
+      errors.value.website_url = 'Please enter a valid URL (e.g., https://example.com)'
+    }
   }
 }
 
@@ -304,52 +263,121 @@ function resetForm() {
 async function saveProject() {
   validateForm()
   if (!isValidForm.value || !project.value) return
-  
+
   try {
     saving.value = true
-    await projectsStore.updateProject(project.value.id, form.value)
-    console.log('Project updated successfully')
+    console.log('🔄 Updating project with data:', form.value)
+
+    const result = await projectsStore.updateProject(project.value.id, {
+      name: form.value.name.trim(),
+      website_url: form.value.website_url.trim() || undefined,
+      // Add other fields as needed based on API
+    })
+
+    if (result.success) {
+      showSuccess('Project updated successfully!', 'Changes Saved')
+      console.log('✅ Project updated successfully')
+    } else {
+      showError(result.error || 'Failed to update project', 'Update Failed')
+      console.error('❌ Failed to update project:', result.error)
+    }
   } catch (error) {
-    console.error('Failed to update project:', error)
+    console.error('❌ Exception updating project:', error)
+    showError('An unexpected error occurred', 'Update Failed')
   } finally {
     saving.value = false
   }
 }
 
-function copyApiKey() {
-  if (project.value?.api_key) {
-    navigator.clipboard.writeText(project.value.api_key).then(() => {
-      console.log('API key copied to clipboard')
-    }).catch(() => {
-      console.error('Failed to copy API key')
-    })
+async function copyApiKey() {
+  if (!project.value?.api_key) {
+    showError('No API key available', 'Copy Failed')
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(project.value.api_key)
+    showSuccess('API key copied to clipboard!', 'Copied')
+    console.log('✅ API key copied to clipboard')
+  } catch (error) {
+    console.error('❌ Failed to copy API key:', error)
+
+    // Fallback for older browsers
+    try {
+      const textArea = document.createElement('textarea')
+      textArea.value = project.value.api_key
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-9999px'
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      showSuccess('API key copied to clipboard!', 'Copied')
+      console.log('✅ API key copied via fallback method')
+    } catch (fallbackError) {
+      showError('Failed to copy API key', 'Copy Failed')
+      console.error('❌ All copy methods failed:', fallbackError)
+    }
   }
 }
 
 async function regenerateApiKey() {
   if (!project.value) return
-  
+
+  // Add confirmation dialog for regenerating API key
+  const confirmed = confirm(
+    'Are you sure you want to regenerate the API key? ' +
+    'This will invalidate the current key and you\'ll need to update your integration.'
+  )
+
+  if (!confirmed) return
+
   try {
     regenerating.value = true
-    await projectsStore.regenerateApiKey(project.value.id)
-    console.log('API key regenerated successfully')
+    console.log('🔄 Regenerating API key for project:', project.value.id)
+
+    const result = await projectsStore.regenerateApiKey(project.value.id)
+
+    if (result.success && result.api_key) {
+      showSuccess('API key regenerated successfully!', 'New Key Generated')
+      console.log('✅ API key regenerated:', '...' + result.api_key.slice(-4))
+    } else {
+      showError(result.error || 'Failed to regenerate API key', 'Regeneration Failed')
+      console.error('❌ Failed to regenerate API key:', result.error)
+    }
   } catch (error) {
-    console.error('Failed to regenerate API key:', error)
+    console.error('❌ Exception regenerating API key:', error)
+    showError('An unexpected error occurred', 'Regeneration Failed')
   } finally {
     regenerating.value = false
   }
 }
 
 async function deleteProject() {
-  if (!project.value || deleteConfirmText.value !== project.value.name) return
-  
+  if (!project.value || deleteConfirmText.value !== project.value.name) {
+    showError('Please type the project name exactly to confirm deletion', 'Confirmation Required')
+    return
+  }
+
   try {
     deleting.value = true
-    await projectsStore.deleteProject(project.value.id)
-    console.log('Project deleted successfully')
-    router.push('/dashboard')
+    console.log('🗑️ Deleting project:', project.value.id)
+
+    const result = await projectsStore.deleteProject(project.value.id)
+
+    if (result.success) {
+      showSuccess('Project deleted successfully', 'Project Deleted')
+      console.log('✅ Project deleted successfully')
+
+      // Navigate back to dashboard
+      router.push('/dashboard')
+    } else {
+      showError(result.error || 'Failed to delete project', 'Deletion Failed')
+      console.error('❌ Failed to delete project:', result.error)
+    }
   } catch (error) {
-    console.error('Failed to delete project:', error)
+    console.error('❌ Exception deleting project:', error)
+    showError('An unexpected error occurred', 'Deletion Failed')
   } finally {
     deleting.value = false
     confirmDelete.value = false

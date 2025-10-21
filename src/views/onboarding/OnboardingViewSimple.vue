@@ -87,31 +87,14 @@
       <!-- Web Platform -->
       <div v-if="selectedPlatform === 'web'">
         <div class="space-y-6">
-          <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-            <div class="flex items-start">
-              <i class="pi pi-info-circle text-blue-600 mt-1 mr-3"></i>
-              <div>
-                <h4 class="font-semibold text-blue-800 mb-1">Quick Installation</h4>
-                <p class="text-blue-700 text-sm">Add this script to your website's &lt;head&gt; section to start
-                  tracking immediately.</p>
-              </div>
-            </div>
-          </div>
+          <!-- RadarSnap Integration Script Component -->
+          <IntegrationScript :project-api-key="currentProject?.api_key || 'rs_demo_1234567890abcdef'"
+            :project-name="currentProject?.name" />
 
-          <div class="relative">
-            <label class="block text-sm font-semibold text-gray-700 mb-3">HTML Script Tag (Recommended)</label>
-            <div class="relative bg-gray-900 rounded-lg p-4 overflow-x-auto">
-              <pre class="text-green-400 text-sm font-mono"><code>{{ htmlScript }}</code></pre>
-              <button @click="copyCode('HTML Script', htmlScript)"
-                class="absolute top-3 right-3 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center">
-                <i class="pi pi-copy mr-2"></i>
-                Copy
-              </button>
-            </div>
-          </div>
 
-          <div class="relative">
-            <label class="block text-sm font-semibold text-gray-700 mb-3">NPM Insdsstallation</label>
+          <!-- enable this when needed -->
+          <!-- <div class="relative">
+            <label class="block text-sm font-semibold text-gray-700 mb-3">NPM Installation</label>
             <div class="space-y-3">
               <div class="relative bg-gray-900 rounded-lg p-4">
                 <pre class="text-green-400 text-sm font-mono"><code>npm install @radar-snap/web</code></pre>
@@ -130,7 +113,9 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
+
+
         </div>
       </div>
 
@@ -150,8 +135,9 @@
           <div class="relative">
             <label class="block text-sm font-semibold text-gray-700 mb-3">1. Install Package</label>
             <div class="relative bg-gray-900 rounded-lg p-4">
-              <pre class="text-green-400 text-sm font-mono"><code>npm install @radar-snap/react</code></pre>
-              <button @click="copyCode('React Install', 'npm install @radar-snap/react')"
+              <pre
+                class="text-green-400 text-sm font-mono"><code>npm install {{ '@radar' + '-snap/react' }}</code></pre>
+              <button @click="copyCode('React Install', 'npm install @radar' + '-snap/react')"
                 class="absolute top-3 right-3 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center">
                 <i class="pi pi-copy mr-2"></i>
                 Copy
@@ -189,8 +175,8 @@
           <div class="relative">
             <label class="block text-sm font-semibold text-gray-700 mb-3">1. Install Plugin</label>
             <div class="relative bg-gray-900 rounded-lg p-4">
-              <pre class="text-green-400 text-sm font-mono"><code>npm install @radar-snap/vue</code></pre>
-              <button @click="copyCode('Vue Install', 'npm install @radar-snap/vue')"
+              <pre class="text-green-400 text-sm font-mono"><code>npm install {{ '@radar' + '-snap/vue' }}</code></pre>
+              <button @click="copyCode('Vue Install', 'npm install @radar' + '-snap/vue')"
                 class="absolute top-3 right-3 bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-medium transition-colors flex items-center">
                 <i class="pi pi-copy mr-2"></i>
                 Copy
@@ -325,6 +311,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useProjectsStore } from '@/stores/projects'
+import IntegrationScript from '@/components/IntegrationScript.vue'
 
 // Store
 const projectsStore = useProjectsStore()
@@ -381,23 +368,6 @@ const mobileTypes = [
 ]
 
 // Code Templates
-const htmlScript = computed(() => {
-  const apiKey = currentProject.value?.api_key || 'rs_demo_1234567890abcdef'
-  return `<!-- Radar-Snap Analytics -->
-<script>
-(function(r,a,d,s,n,p){
-  r.RadarSnap=r.RadarSnap||function(){
-    (r.RadarSnap.q=r.RadarSnap.q||[]).push(arguments)
-  };
-  n=a.createElement(d);p=a.getElementsByTagName(d)[0];
-  n.async=1;n.src=s;p.parentNode.insertBefore(n,p);
-})(window,document,'script','https://cdn.radar-snap.com/v1/radar-snap.min.js');
-
-RadarSnap('init', '${apiKey}');
-RadarSnap('trackPageView');
-</` + `script>`
-})
-
 const npmUsage = computed(() => {
   const apiKey = currentProject.value?.api_key || 'rs_demo_1234567890abcdef'
   return `import RadarSnap from '@radar-snap/web';
@@ -417,8 +387,9 @@ RadarSnap.track('button_click', {
 
 const reactUsage = computed(() => {
   const apiKey = currentProject.value?.api_key || 'rs_demo_1234567890abcdef'
+  const reactPackage = '@radar' + '-snap/react'
   return `import React from 'react';
-import { RadarSnapProvider } from '@radar-snap/react';
+import { RadarSnapProvider } from '${reactPackage}';
 
 function App() {
   return (
@@ -433,8 +404,9 @@ export default App;`
 
 const vueUsage = computed(() => {
   const apiKey = currentProject.value?.api_key || 'rs_demo_1234567890abcdef'
+  const vuePackage = '@radar' + '-snap/vue'
   return `import { createApp } from 'vue';
-import RadarSnapPlugin from '@radar-snap/vue';
+import RadarSnapPlugin from '${vuePackage}';
 import App from './App.vue';
 
 const app = createApp(App);
@@ -449,7 +421,8 @@ app.mount('#app');`
 
 const reactNativeUsage = computed(() => {
   const apiKey = currentProject.value?.api_key || 'rs_demo_1234567890abcdef'
-  return `import RadarSnap from '@radar-snap/react-native';
+  const rnPackage = '@radar' + '-snap/react-native'
+  return `import RadarSnap from '${rnPackage}';
 
 export default function App() {
   React.useEffect(() => {

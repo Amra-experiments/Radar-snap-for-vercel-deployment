@@ -11,7 +11,8 @@ import Checkbox from 'primevue/checkbox'
 const router = useRouter()
 const authStore = useAuthStore()
 
-const name = ref('')
+const firstName = ref('')
+const lastName = ref('')
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
@@ -20,30 +21,35 @@ const error = ref('')
 
 async function handleSignup() {
   error.value = ''
-  
+
   // Validation
-  if (!name.value || !email.value || !password.value || !confirmPassword.value) {
+  if (!firstName.value || !lastName.value || !email.value || !password.value || !confirmPassword.value) {
     error.value = 'Please fill in all fields'
     return
   }
-  
+
   if (password.value !== confirmPassword.value) {
     error.value = 'Passwords do not match'
     return
   }
-  
+
   if (password.value.length < 8) {
     error.value = 'Password must be at least 8 characters long'
     return
   }
-  
+
   if (!agreeToTerms.value) {
     error.value = 'Please agree to the Terms of Service and Privacy Policy'
     return
   }
-  
-  const result = await authStore.register(name.value, email.value, password.value)
-  
+
+  const result = await authStore.register({
+    first_name: firstName.value,
+    last_name: lastName.value,
+    email: email.value,
+    password: password.value
+  })
+
   if (result.success) {
     // Redirect to onboarding for new users
     router.push('/onboarding')
@@ -64,7 +70,8 @@ function validatePassword(password: string) {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <!-- Logo and Header -->
       <div class="text-center">
@@ -89,21 +96,22 @@ function validatePassword(password: string) {
         </Message>
 
         <form @submit.prevent="handleSignup" class="space-y-6">
-          <!-- Full Name -->
+          <!-- First Name -->
           <div>
-            <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
-              Full Name
+            <label for="firstName" class="block text-sm font-semibold text-gray-700 mb-2">
+              First Name
             </label>
-            <InputText 
-              id="name"
-              v-model="name"
-              placeholder="John Doe"
-              class="w-full"
-              size="large"
-              :class="{ 'p-invalid': error && !name }"
-              required
-              autocomplete="name"
-            />
+            <InputText id="firstName" v-model="firstName" placeholder="John" class="w-full" size="large"
+              :class="{ 'p-invalid': error && !firstName }" required autocomplete="given-name" />
+          </div>
+
+          <!-- Last Name -->
+          <div>
+            <label for="lastName" class="block text-sm font-semibold text-gray-700 mb-2">
+              Last Name
+            </label>
+            <InputText id="lastName" v-model="lastName" placeholder="Doe" class="w-full" size="large"
+              :class="{ 'p-invalid': error && !lastName }" required autocomplete="family-name" />
           </div>
 
           <!-- Email -->
@@ -111,17 +119,8 @@ function validatePassword(password: string) {
             <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
               Email address
             </label>
-            <InputText 
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="you@example.com"
-              class="w-full"
-              size="large"
-              :class="{ 'p-invalid': error && !email }"
-              required
-              autocomplete="email"
-            />
+            <InputText id="email" v-model="email" type="email" placeholder="you@example.com" class="w-full" size="large"
+              :class="{ 'p-invalid': error && !email }" required autocomplete="email" />
           </div>
 
           <!-- Password -->
@@ -129,30 +128,14 @@ function validatePassword(password: string) {
             <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
-            <Password 
-              id="password"
-              v-model="password"
-              placeholder="Create a strong password"
-              toggleMask
-              class="w-full"
-              inputClass="w-full"
-              :inputStyle="{ padding: '0.75rem 1rem' }"
-              :class="{ 'p-invalid': error && !password }"
-              required
-              autocomplete="new-password"
-              :feedback="true"
-            />
-            
+            <Password id="password" v-model="password" placeholder="Create a strong password" toggleMask class="w-full"
+              inputClass="w-full" :inputStyle="{ padding: '0.75rem 1rem' }" :class="{ 'p-invalid': error && !password }"
+              required autocomplete="new-password" :feedback="true" />
+
             <!-- Password Requirements -->
             <div v-if="password" class="mt-2 space-y-1">
-              <div 
-                v-for="req in validatePassword(password)" 
-                :key="req.text"
-                class="flex items-center gap-2 text-xs"
-              >
-                <i 
-                  :class="req.test ? 'pi pi-check text-green-600' : 'pi pi-times text-red-600'"
-                ></i>
+              <div v-for="req in validatePassword(password)" :key="req.text" class="flex items-center gap-2 text-xs">
+                <i :class="req.test ? 'pi pi-check text-green-600' : 'pi pi-times text-red-600'"></i>
                 <span :class="req.test ? 'text-green-600' : 'text-red-600'">
                   {{ req.text }}
                 </span>
@@ -165,19 +148,9 @@ function validatePassword(password: string) {
             <label for="confirm" class="block text-sm font-semibold text-gray-700 mb-2">
               Confirm Password
             </label>
-            <Password 
-              id="confirm"
-              v-model="confirmPassword"
-              placeholder="Repeat your password"
-              :feedback="false"
-              toggleMask
-              class="w-full"
-              inputClass="w-full"
-              :inputStyle="{ padding: '0.75rem 1rem' }"
-              :class="{ 'p-invalid': error && !confirmPassword }"
-              required
-              autocomplete="new-password"
-            />
+            <Password id="confirm" v-model="confirmPassword" placeholder="Repeat your password" :feedback="false"
+              toggleMask class="w-full" inputClass="w-full" :inputStyle="{ padding: '0.75rem 1rem' }"
+              :class="{ 'p-invalid': error && !confirmPassword }" required autocomplete="new-password" />
             <div v-if="confirmPassword && password !== confirmPassword" class="flex items-center gap-2 mt-2">
               <i class="pi pi-times text-red-600 text-xs"></i>
               <span class="text-xs text-red-600">Passwords do not match</span>
@@ -190,18 +163,13 @@ function validatePassword(password: string) {
 
           <!-- Terms Agreement -->
           <div class="flex items-start gap-3">
-            <Checkbox 
-              id="terms" 
-              v-model="agreeToTerms"
-              :binary="true"
-              class="mt-0.5"
-            />
+            <Checkbox id="terms" v-model="agreeToTerms" :binary="true" class="mt-0.5" />
             <label for="terms" class="text-sm text-gray-600">
-              I agree to the 
+              I agree to the
               <a href="/terms" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">
                 Terms of Service
               </a>
-              and 
+              and
               <a href="/privacy" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">
                 Privacy Policy
               </a>
@@ -209,24 +177,15 @@ function validatePassword(password: string) {
           </div>
 
           <!-- Submit Button -->
-          <Button 
-            type="submit"
-            label="Create Account"
-            class="w-full"
-            size="large"
-            :loading="authStore.loading"
-            :disabled="authStore.loading || !agreeToTerms"
-          />
+          <Button type="submit" label="Create Account" class="w-full" size="large" :loading="authStore.loading"
+            :disabled="authStore.loading || !agreeToTerms" />
         </form>
 
         <!-- Login Link -->
         <div class="mt-8 text-center">
           <p class="text-sm text-gray-600">
             Already have an account?
-            <router-link 
-              to="/login" 
-              class="text-blue-600 hover:text-blue-700 font-semibold ml-1"
-            >
+            <router-link to="/login" class="text-blue-600 hover:text-blue-700 font-semibold ml-1">
               Sign in instead
             </router-link>
           </p>
